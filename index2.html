@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terroir &amp; Table — Global Recipe Atlas</title>
+
+  <!-- Google Fonts: Playfair Display (Editorial Serif) & Plus Jakarta Sans (Clean UI Sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Tailwind Custom Editorial Design Tokens -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: '#FAF7F2',
+            parchment: '#F3EDE3',
+            ink: '#1E1E1C',
+            muted: '#635F58',
+            terracotta: {
+              DEFAULT: '#C85A32',
+              dark: '#A94622',
+              light: '#F8EAE4'
+            },
+            olive: {
+              DEFAULT: '#4A5D3F',
+              dark: '#38472F',
+              light: '#EBF0E8'
+            },
+            sand: '#E6DFD5'
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
+          },
+          boxShadow: {
+            editorial: '0 10px 30px -10px rgba(30, 30, 28, 0.08)',
+            card: '0 4px 20px -2px rgba(30, 30, 28, 0.05)'
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Custom Scrollbar & Editorial Refinements */
+    body {
+      background-color: #FAF7F2;
+      color: #1E1E1C;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Hide scrollbars cleanly for horizontal pill bars */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Cook Mode Overrides */
+    body.cook-mode-active {
+      background-color: #141413 !important;
+      color: #F7F4EE !important;
+    }
+    body.cook-mode-active #recipe-modal-card {
+      background-color: #1C1C1A !important;
+      color: #F7F4EE !important;
+      border-color: #33322E !important;
+      max-width: 1100px !important;
+    }
+    body.cook-mode-active .cook-mode-text-lg {
+      font-size: 1.325rem !important;
+      line-height: 1.8 !important;
+    }
+    body.cook-mode-active .cook-mode-surface {
+      background-color: #252522 !important;
+      border-color: #3A3934 !important;
+      color: #F7F4EE !important;
+    }
+    body.cook-mode-active .cook-mode-muted {
+      color: #B8B3A8 !important;
+    }
+
+    /* Custom Checkbox Animation */
+    .editorial-checkbox:checked + span {
+      text-decoration: line-through;
+      opacity: 0.55;
+    }
+    .step-completed .step-text {
+      text-decoration: line-through;
+      opacity: 0.5;
+    }
+
+    /* Subtle Fade In */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.25s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-cream text-ink selection:bg-terracotta selection:text-white">
+
+  <!-- =====================================================================
+       1. STICKY EDITORIAL HEADER & MEGA-MENU NAVIGATION
+       ===================================================================== -->
+  <header class="sticky top-0 z-40 bg-cream/95 backdrop-blur-md border-b border-sand transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20 gap-4">
+
+        <!-- Brand Logo -->
+        <a href="#" id="brand-reset" class="flex items-center gap-3 group shrink-0">
+          <div class="w-10 h-10 rounded-full bg-terracotta text-white flex items-center justify-center shadow-sm group-hover:bg-terracotta-dark transition">
+            <!-- Minimalist Globe / Fork Emblem SVG -->
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M3.6 9h16.8M3.6 15h16.8"></path>
+              <path d="M12 3a14.5 14.5 0 0 0 0 18 14.5 14.5 0 0 0 0-18"></path>
+            </svg>
+          </div>
+          <div>
+            <span class="font-serif text-2xl font-bold tracking-tight text-ink block leading-none">Terroir &amp; Table</span>
+            <span class="text-[10px] uppercase tracking-[0.22em] text-muted font-semibold mt-1 block">Global Recipe Atlas</span>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation Controls -->
+        <nav class="hidden lg:flex items-center gap-2">
+          <!-- Explore Cuisines Mega-Menu Trigger -->
+          <div class="relative" id="mega-menu-wrapper">
+            <button id="mega-menu-btn" type="button" aria-expanded="false"
+              class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold text-ink hover:bg-parchment transition">
+              <span>Explore Cuisines</span>
+              <svg id="mega-menu-chevron" class="w-4 h-4 text-muted transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+              </svg>
+            </button>
+
+            <!-- Mega Menu Dropdown Panel -->
+            <div id="mega-menu-panel"
+              class="hidden absolute left-0 mt-3 w-[640px] bg-white rounded-2xl border border-sand shadow-editorial p-6 z-50 animate-fade-in">
+              <div class="flex items-center justify-between pb-3 mb-4 border-b border-sand">
+                <span class="text-xs font-bold uppercase tracking-wider text-muted">Browse by World Region</span>
+                <button type="button" data-cuisine-filter="All" class="mega-cuisine-link text-xs font-semibold text-terracotta hover:underline">
+                  View All Cuisines &rarr;
+                </button>
+              </div>
+              <div class="grid grid-cols-2 gap-6">
+                <!-- Asia -->
+                <div>
+                  <h4 class="font-serif text-base font-bold text-ink mb-2 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-terracotta"></span> East &amp; Southeast Asia
+                  </h4>
+                  <ul class="space-y-1.5 text-sm">
+                    <li><button type="button" data-cuisine-filter="Japanese" class="mega-cuisine-link w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cream text-muted hover:text-ink font-medium transition flex justify-between"><span>Japanese</span><span class="text-xs text-muted/70">Dashi &amp; Umami</span></button></li>
+                    <li><button type="button" data-cuisine-filter="Thai" class="mega-cuisine-link w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cream text-muted hover:text-ink font-medium transition flex justify-between"><span>Thai</span><span class="text-xs text-muted/70">Herbal &amp; Bright</span></button></li>
+                    <li><button type="button" data-cuisine-filter="Filipino" class="mega-cuisine-link w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cream text-muted hover:text-ink font-medium transition flex justify-between"><span>Filipino</span><span class="text-xs text-muted/70">Vinegar &amp; Savory</span></button></li>
+                  </ul>
+                </div>
+
+                <!-- Americas -->
+                <div>
+                  <h4 class="font-serif text-base font-bold text-ink mb-2 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-olive"></span> The Americas
+                  </h4>
+                  <ul class="space-y-1.5 text-sm">
+                    <li><button type="button" data-cuisine-filter="Mexican" class="mega-cuisine-link w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cream text-muted hover:text-ink font-medium transition flex justify-between"><span>Mexican</span><span class="text-xs text-muted/70">Chiles &amp; Masa</span></button></li>
+                    <li><button type="button" data-cuisine-filter="Peruvian" class="mega-cuisine-link w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cream text-muted hover:text-ink font-medium transition flex justify-between"><span>Peruvian</span><span class="text-xs text-muted/70">Andean &amp; Coastal</span></button></li>
+                  </ul>
+                </div>
+
+                <!-- Europe -->
+                <div>
+                  <h4 class="font-serif text-base font-bold text-ink mb-2 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-600"></span> Europe &amp; Mediterranean
+                  </h4>
+                  <ul class="space-y-1.5 text-sm">
+                    <li><button type="button" data-cuisine-filter="Italian" class="mega-cuisine-link w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cream text-muted hover:text-ink font-medium transition flex justify-between"><span>Italian</span><span class="text-xs text-muted/70">Regional Pasta</span></button></li>
+                    <li><button type="button" data-cuisine-filter="Spanish" class="mega-cuisine-link w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cream text-muted hover:text-ink font-medium transition flex justify-between"><span>Spanish</span><span class="text-xs text-muted/70">Saffron &amp; Olive Oil</span></button></li>
+                  </ul>
+                </div>
+
+                <!-- Africa & Middle East -->
+                <div>
+                  <h4 class="font-serif text-base font-bold text-ink mb-2 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-stone-700"></span> Africa &amp; Middle East
+                  </h4>
+                  <ul class="space-y-1.5 text-sm">
+                    <li><button type="button" data-cuisine-filter="Ethiopian" class="mega-cuisine-link w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cream text-muted hover:text-ink font-medium transition flex justify-between"><span>Ethiopian</span><span class="text-xs text-muted/70">Berbere &amp; Spiced Butter</span></button></li>
+                    <li><button type="button" data-cuisine-filter="Lebanese" class="mega-cuisine-link w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cream text-muted hover:text-ink font-medium transition flex justify-between"><span>Lebanese</span><span class="text-xs text-muted/70">Mezze &amp; Tahini</span></button></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dietary Filter Dropdown -->
+          <div class="relative" id="dietary-menu-wrapper">
+            <button id="dietary-menu-btn" type="button"
+              class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold text-ink hover:bg-parchment transition">
+              <span id="dietary-btn-label">Dietary: All</span>
+              <svg class="w-4 h-4 text-muted" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <div id="dietary-menu-panel"
+              class="hidden absolute left-0 mt-3 w-52 bg-white rounded-2xl border border-sand shadow-editorial p-2 z-50 animate-fade-in">
+              <button type="button" data-dietary="All" class="dietary-option w-full text-left px-3.5 py-2 rounded-xl text-sm font-medium bg-cream text-ink">All Diets</button>
+              <button type="button" data-dietary="Vegetarian" class="dietary-option w-full text-left px-3.5 py-2 rounded-xl text-sm font-medium text-muted hover:bg-cream hover:text-ink">Vegetarian</button>
+              <button type="button" data-dietary="Vegan" class="dietary-option w-full text-left px-3.5 py-2 rounded-xl text-sm font-medium text-muted hover:bg-cream hover:text-ink">Vegan</button>
+              <button type="button" data-dietary="Gluten-Free" class="dietary-option w-full text-left px-3.5 py-2 rounded-xl text-sm font-medium text-muted hover:bg-cream hover:text-ink">Gluten-Free</button>
+              <button type="button" data-dietary="Dairy-Free" class="dietary-option w-full text-left px-3.5 py-2 rounded-xl text-sm font-medium text-muted hover:bg-cream hover:text-ink">Dairy-Free</button>
+            </div>
+          </div>
+
+          <!-- Random Dish CTA -->
+          <button id="random-dish-btn" type="button"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold bg-olive text-white hover:bg-olive-dark transition shadow-sm">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
+            </svg>
+            <span>Random Dish</span>
+          </button>
+        </nav>
+
+        <!-- Header Live Search Input -->
+        <div class="hidden md:flex items-center relative w-64 xl:w-72">
+          <svg class="w-4 h-4 text-muted absolute left-3.5 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.3-4.3"></path>
+          </svg>
+          <input id="header-search-input" type="search" placeholder="Search recipes, ingredients..."
+            class="w-full pl-10 pr-4 py-2 bg-white border border-sand rounded-full text-sm text-ink placeholder:text-muted/70 focus:outline-none focus:border-terracotta transition" />
+        </div>
+
+        <!-- Mobile Menu & Random Dish Buttons -->
+        <div class="flex lg:hidden items-center gap-2">
+          <button id="mobile-random-btn" type="button" aria-label="Random Dish"
+            class="p-2.5 rounded-full bg-olive text-white hover:bg-olive-dark transition">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
+            </svg>
+          </button>
+          <button id="mobile-menu-toggle" type="button" aria-label="Open Navigation"
+            class="p-2.5 rounded-full border border-sand bg-white text-ink hover:bg-parchment transition">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer -->
+    <div id="mobile-drawer" class="hidden lg:hidden bg-white border-t border-sand px-4 pt-4 pb-6 space-y-4">
+      <div class="relative">
+        <input id="mobile-search-input" type="search" placeholder="Search recipes or ingredients..."
+          class="w-full pl-10 pr-4 py-2.5 bg-cream border border-sand rounded-xl text-sm text-ink focus:outline-none focus:border-terracotta" />
+        <svg class="w-4 h-4 text-muted absolute left-3.5 top-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>
+        </svg>
+      </div>
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-muted mb-2">Dietary Filter</p>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" data-dietary="All" class="mobile-dietary-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-terracotta text-white">All</button>
+          <button type="button" data-dietary="Vegetarian" class="mobile-dietary-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-cream text-ink border border-sand">Vegetarian</button>
+          <button type="button" data-dietary="Vegan" class="mobile-dietary-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-cream text-ink border border-sand">Vegan</button>
+          <button type="button" data-dietary="Gluten-Free" class="mobile-dietary-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-cream text-ink border border-sand">Gluten-Free</button>
+          <button type="button" data-dietary="Dairy-Free" class="mobile-dietary-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-cream text-ink border border-sand">Dairy-Free</button>
+        </div>
+      </div>
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-muted mb-2">Cuisines by Region</p>
+        <div class="grid grid-cols-2 gap-2 text-sm">
+          <button type="button" data-cuisine-filter="All" class="mega-cuisine-link text-left px-3 py-2 rounded-lg bg-cream font-semibold">All Cuisines</button>
+          <button type="button" data-cuisine-filter="Japanese" class="mega-cuisine-link text-left px-3 py-2 rounded-lg bg-cream">Japanese</button>
+          <button type="button" data-cuisine-filter="Mexican" class="mega-cuisine-link text-left px-3 py-2 rounded-lg bg-cream">Mexican</button>
+          <button type="button" data-cuisine-filter="Ethiopian" class="mega-cuisine-link text-left px-3 py-2 rounded-lg bg-cream">Ethiopian</button>
+          <button type="button" data-cuisine-filter="Italian" class="mega-cuisine-link text-left px-3 py-2 rounded-lg bg-cream">Italian</button>
+          <button type="button" data-cuisine-filter="Lebanese" class="mega-cuisine-link text-left px-3 py-2 rounded-lg bg-cream">Lebanese</button>
+          <button type="button" data-cuisine-filter="Thai" class="mega-cuisine-link text-left px-3 py-2 rounded-lg bg-cream">Thai</button>
+          <button type="button" data-cuisine-filter="Peruvian" class="mega-cuisine-link text-left px-3 py-2 rounded-lg bg-cream">Peruvian</button>
+          <button type="button" data-cuisine-filter="Filipino" class="mega-cuisine-link text-left px-3 py-2 rounded-lg bg-cream">Filipino</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       2. EDITORIAL SEARCH-FIRST HERO BANNER
+       ===================================================================== -->
+  <section class="relative overflow-hidden border-b border-sand bg-gradient-to-b from-parchment/70 to-cream pt-10 pb-14 lg:py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+
+        <!-- Left Column: Editorial Headline & Multi-Mode Search Box -->
+        <div class="lg:col-span-7 space-y-6">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-terracotta-light text-terracotta text-xs font-bold uppercase tracking-wider">
+            <span>Kitchen-Tested Global Archives</span>
+            <span>&bull;</span>
+            <span>9 Authentic Regions</span>
+          </div>
+
+          <h1 class="font-serif text-4xl sm:text-5xl lg:text-[3.4rem] font-bold text-ink leading-[1.1] tracking-tight">
+            Cook the world’s defining kitchens, <span class="italic font-normal text-terracotta">from scratch.</span>
+          </h1>
+
+          <p class="text-base sm:text-lg text-muted max-w-2xl leading-relaxed">
+            Deeply researched recipes with cultural notes, live metric/US conversions, dynamic serving scaling, and a distraction-free Cook Mode built for your countertop.
+          </p>
+
+          <!-- Multi-Mode Search & Fridge Matcher Widget -->
+          <div class="bg-white rounded-3xl border border-sand shadow-editorial p-4 sm:p-5 space-y-4">
+            <!-- Mode Tabs -->
+            <div class="flex flex-wrap items-center gap-2 border-b border-sand pb-3">
+              <button type="button" id="mode-dish-btn"
+                class="search-mode-tab px-3.5 py-1.5 rounded-full text-xs font-bold bg-ink text-white transition">
+                Search Dishes &amp; Cuisines
+              </button>
+              <button type="button" id="mode-fridge-btn"
+                class="search-mode-tab px-3.5 py-1.5 rounded-full text-xs font-bold bg-cream text-muted hover:text-ink transition flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-olive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path>
+                  <path d="M3 10h18M8 6v2M8 14v3"></path>
+                </svg>
+                <span>What's in Your Fridge?</span>
+              </button>
+            </div>
+
+            <!-- Input Row -->
+            <div class="grid sm:grid-cols-12 gap-3">
+              <div class="sm:col-span-7 relative">
+                <input id="hero-search-input" type="text"
+                  placeholder="Try 'Miso Ramen', 'Peruvian', or 'garlic'..."
+                  class="w-full px-4 py-3 bg-cream/70 border border-sand rounded-2xl text-sm text-ink placeholder:text-muted/75 focus:outline-none focus:border-terracotta focus:bg-white transition" />
+              </div>
+
+              <!-- Cooking Time Selector -->
+              <div class="sm:col-span-3">
+                <select id="time-filter-select" aria-label="Maximum Cooking Time"
+                  class="w-full h-full px-3.5 py-3 bg-cream/70 border border-sand rounded-2xl text-sm font-medium text-ink focus:outline-none focus:border-terracotta cursor-pointer">
+                  <option value="999">Any Time</option>
+                  <option value="30">Under 30 mins</option>
+                  <option value="45">Under 45 mins</option>
+                  <option value="60">Under 1 hour</option>
+                </select>
+              </div>
+
+              <!-- Search Action Button -->
+              <div class="sm:col-span-2">
+                <button id="hero-search-submit" type="button"
+                  class="w-full h-full py-3 px-4 rounded-2xl bg-terracotta hover:bg-terracotta-dark text-white font-bold text-sm transition shadow-sm">
+                  Find
+                </button>
+              </div>
+            </div>
+
+            <!-- Quick Fridge Ingredient Chips (Shown in Fridge Mode or as helpful suggestions) -->
+            <div id="fridge-suggestions" class="flex flex-wrap items-center gap-2 text-xs text-muted pt-1">
+              <span class="font-semibold text-ink">Quick pantry picks:</span>
+              <button type="button" data-fridge-preset="chicken, garlic, vinegar" class="fridge-preset-chip px-2.5 py-1 rounded-full bg-olive-light text-olive font-medium hover:bg-olive hover:text-white transition">chicken, garlic, vinegar</button>
+              <button type="button" data-fridge-preset="chickpeas, lemon, tahini" class="fridge-preset-chip px-2.5 py-1 rounded-full bg-olive-light text-olive font-medium hover:bg-olive hover:text-white transition">chickpeas, lemon, tahini</button>
+              <button type="button" data-fridge-preset="lime, fish, chili" class="fridge-preset-chip px-2.5 py-1 rounded-full bg-olive-light text-olive font-medium hover:bg-olive hover:text-white transition">lime, fish, chili</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Featured Editorial Dish Spotlight -->
+        <div class="lg:col-span-5">
+          <article id="hero-featured-card" class="group cursor-pointer bg-white rounded-3xl border border-sand overflow-hidden shadow-editorial hover:shadow-xl transition duration-300">
+            <div class="relative aspect-[4/3] overflow-hidden bg-parchment">
+              <img
+                src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1000&q=80"
+                onerror="this.onerror=null;this.src='https://placehold.co/800x600/C85A32/FAF7F2?text=Spicy+Miso+Ramen';"
+                alt="Steaming bowl of Spicy Sesame Tan-Tan Ramen"
+                class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+              <div class="absolute top-4 left-4 flex gap-2">
+                <span class="px-3 py-1 rounded-full bg-white/95 backdrop-blur-sm text-ink text-xs font-bold shadow-sm">Editor's Pick</span>
+                <span class="px-3 py-1 rounded-full bg-terracotta text-white text-xs font-bold shadow-sm">Japanese</span>
+              </div>
+            </div>
+            <div class="p-6 space-y-2.5">
+              <div class="flex items-center justify-between text-xs font-semibold text-muted">
+                <span>35 mins total &bull; Medium</span>
+                <span class="text-amber-600 font-bold">&#9733; 4.9 (418)</span>
+              </div>
+              <h2 class="font-serif text-2xl font-bold text-ink group-hover:text-terracotta transition">
+                Spicy Sesame Tantanmen Ramen
+              </h2>
+              <p class="text-sm text-muted line-clamp-2 leading-relaxed">
+                Velvety toasted sesame and soy-milk dashi broth crowned with chili-crisped pork, jammy ajitsuke egg, and baby bok choy.
+              </p>
+            </div>
+          </article>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       3. INTERACTIVE CUISINE EXPLORER (VISUAL CARDS + FILTER PILLS)
+       ===================================================================== -->
+  <section id="explorer-section" class="py-12 border-b border-sand bg-cream">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-[0.2em] text-terracotta">Culinary Passport</span>
+          <h2 class="font-serif text-3xl font-bold text-ink mt-1">Explore by Cuisine</h2>
+        </div>
+        <button id="reset-all-filters-btn" type="button"
+          class="self-start sm:self-auto text-sm font-semibold text-muted hover:text-terracotta underline underline-offset-4 transition">
+          Reset all filters
+        </button>
+      </div>
+
+      <!-- Horizontal Scrollable Visual Cuisine Cards -->
+      <div id="cuisine-cards-strip" class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+        <!-- Populated dynamically via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       4. RECIPE ARCHIVE GRID
+       ===================================================================== -->
+  <main id="recipes-grid-section" class="py-14">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+
+      <!-- Active Filter Summary & Sort Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-sand">
+        <div>
+          <h3 id="results-heading" class="font-serif text-2xl font-bold text-ink">All Global Recipes</h3>
+          <p id="results-subtext" class="text-sm text-muted mt-0.5">Showing 9 kitchen-tested dishes from 9 countries</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <label for="sort-select" class="text-xs font-bold uppercase tracking-wider text-muted">Sort by:</label>
+          <select id="sort-select"
+            class="px-3.5 py-2 bg-white border border-sand rounded-xl text-sm font-semibold text-ink focus:outline-none focus:border-terracotta cursor-pointer">
+            <option value="featured">Featured Editorial</option>
+            <option value="rating">Highest Rated</option>
+            <option value="time-asc">Fastest Cook Time</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Recipe Cards Grid -->
+      <div id="recipes-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Recipe Cards injected here by JS -->
+      </div>
+
+      <!-- Empty State (Shown when no recipes match search/filters) -->
+      <div id="empty-state" class="hidden text-center py-16 px-4 bg-white rounded-3xl border border-sand max-w-xl mx-auto space-y-4">
+        <div class="w-14 h-14 rounded-full bg-parchment text-terracotta mx-auto flex items-center justify-center font-serif text-2xl font-bold">?</div>
+        <h4 class="font-serif text-2xl font-bold text-ink">No matching recipes found</h4>
+        <p class="text-sm text-muted">Try removing a dietary restriction, increasing your max cooking time, or searching fewer pantry ingredients.</p>
+        <button id="empty-reset-btn" type="button"
+          class="px-5 py-2.5 rounded-full bg-terracotta text-white text-sm font-bold hover:bg-terracotta-dark transition">
+          Show All Recipes
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- =====================================================================
+       5. INTERACTIVE RECIPE DETAIL VIEW MODAL (SERVING SCALER, UNITS, COOK MODE)
+       ===================================================================== -->
+  <div id="recipe-modal" role="dialog" aria-modal="true" aria-labelledby="modal-recipe-title"
+    class="hidden fixed inset-0 z-50 overflow-y-auto bg-ink/70 backdrop-blur-sm p-2 sm:p-6 lg:p-10">
+    <div id="recipe-modal-card"
+      class="relative max-w-4xl mx-auto bg-white rounded-3xl border border-sand shadow-2xl overflow-hidden my-2 sm:my-6 transition-colors duration-200">
+
+      <!-- Sticky Top Utility Bar inside Modal -->
+      <div class="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-2 px-4 sm:px-8 py-3.5 bg-white/95 backdrop-blur-md border-b border-sand cook-mode-surface">
+        <div class="flex items-center gap-2">
+          <a href="#recipe-ingredients-anchor"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-terracotta text-white text-xs font-bold hover:bg-terracotta-dark transition">
+            <span>&darr; Jump to Recipe</span>
+          </a>
+
+          <!-- Cook Mode Toggle Button -->
+          <button id="cook-mode-toggle" type="button"
+            class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-sand bg-cream text-ink text-xs font-bold hover:border-olive transition">
+            <span id="cook-mode-dot" class="w-2 h-2 rounded-full bg-muted"></span>
+            <span id="cook-mode-label">Cook Mode: Off</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span id="wakelock-status" class="hidden sm:inline-block text-[11px] font-medium text-olive"></span>
+          <button id="close-modal-btn" type="button" aria-label="Close Recipe"
+            class="w-9 h-9 rounded-full bg-cream border border-sand text-ink hover:bg-terracotta hover:text-white hover:border-terracotta flex items-center justify-center transition font-bold">
+            &times;
+          </button>
+        </div>
+      </div>
+
+      <!-- Dynamic Recipe Content Container -->
+      <div id="recipe-modal-body" class="p-5 sm:p-8 lg:p-10 space-y-8">
+        <!-- Populated dynamically via JS when a recipe is opened -->
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       EDITORIAL FOOTER
+       ===================================================================== -->
+  <footer class="bg-parchment border-t border-sand py-12 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div>
+        <span class="font-serif text-xl font-bold text-ink">Terroir &amp; Table</span>
+        <p class="text-xs text-muted mt-1">Celebrating authentic culinary craft across continents. Built for home cooks everywhere.</p>
+      </div>
+      <div class="flex flex-wrap gap-6 text-xs font-semibold text-muted">
+        <a href="#explorer-section" class="hover:text-terracotta transition">Cuisines</a>
+        <a href="#recipes-grid-section" class="hover:text-terracotta transition">Recipe Index</a>
+        <button type="button" id="footer-random-btn" class="hover:text-terracotta transition">Surprise Me</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- =====================================================================
+       APPLICATION JAVASCRIPT: DATA, FILTERING, UNIT CONVERSION & COOK MODE
+       ===================================================================== -->
+  <script>
+    /**
+     * 1. GLOBAL CUISINE & RECIPE DATASET
+     * Each ingredient stores numeric base quantity + US & Metric units for live scaling & conversion.
+     */
+    const CUISINES_META = [
+      { name: 'All', region: 'Global', countLabel: 'All Regions', img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80' },
+      { name: 'Japanese', region: 'Asia', countLabel: 'East Asia', img: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=400&q=80' },
+      { name: 'Mexican', region: 'Americas', countLabel: 'North America', img: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=400&q=80' },
+      { name: 'Ethiopian', region: 'Africa & Middle East', countLabel: 'East Africa', img: 'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=400&q=80' },
+      { name: 'Italian', region: 'Europe', countLabel: 'Mediterranean', img: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=400&q=80' },
+      { name: 'Lebanese', region: 'Africa & Middle East', countLabel: 'Levant', img: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=400&q=80' },
+      { name: 'Thai', region: 'Asia', countLabel: 'SE Asia', img: 'https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&w=400&q=80' },
+      { name: 'Peruvian', region: 'Americas', countLabel: 'South America', img: 'https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?auto=format&fit=crop&w=400&q=80' },
+      { name: 'Filipino', region: 'Asia', countLabel: 'SE Asia', img: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=400&q=80' }
+    ];
+
+    const RECIPES = [
+      {
+        id: 'tantanmen-ramen',
+        title: 'Spicy Sesame Tantanmen Ramen',
+        cuisine: 'Japanese',
+        region: 'Asia',
+        prepTime: 15,
+        cookTime: 20,
+        difficulty: 'Medium',
+        rating: 4.9,
+        reviews: 418,
+        baseServings: 2,
+        dietary: ['Dairy-Free'],
+        image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1000&q=80',
+        summary: 'Velvety toasted sesame and soy-milk dashi broth crowned with chili-crisped pork, jammy egg, and baby bok choy.',
+        culturalNote: 'Adapted from Sichuan dan dan noodles by chef Chen Kenmin in 1950s Tokyo, Japanese Tantanmen trades dry numbing heat for a deeply comforting, creamy sesame-infused soup broth.',
+        ingredients: [
+          { name: 'ground pork (or shiitake mushrooms)', usQty: 0.5, usUnit: 'lb', metricQty: 225, metricUnit: 'g' },
+          { name: 'toasted white sesame paste (neri goma) or tahini', usQty: 3, usUnit: 'tbsp', metricQty: 45, metricUnit: 'ml' },
+          { name: 'unsweetened soy milk', usQty: 1.5, usUnit: 'cups', metricQty: 360, metricUnit: 'ml' },
+          { name: 'chicken or dashi stock', usQty: 1.5, usUnit: 'cups', metricQty: 360, metricUnit: 'ml' },
+          { name: 'doubanjiang (fermented chili bean paste)', usQty: 1.5, usUnit: 'tbsp', metricQty: 22, metricUnit: 'g' },
+          { name: 'soy sauce', usQty: 2, usUnit: 'tbsp', metricQty: 30, metricUnit: 'ml' },
+          { name: 'garlic cloves, finely grated', usQty: 3, usUnit: 'cloves', metricQty: 3, metricUnit: 'cloves' },
+          { name: 'fresh ramen noodles', usQty: 2, usUnit: 'portions', metricQty: 260, metricUnit: 'g' },
+          { name: 'baby bok choy, halved', usQty: 2, usUnit: 'heads', metricQty: 2, metricUnit: 'heads' }
+        ],
+        steps: [
+          { text: 'Heat a splash of neutral oil in a heavy pot over medium-high heat. Brown the ground pork with grated garlic and doubanjiang until deeply caramelized and crisp, about 6 minutes. Scoop half aside for garnish.', timerMinutes: 6 },
+          { text: 'In each serving bowl, whisk together half of the toasted sesame paste, soy sauce, and a teaspoon of chili oil until smooth.', timerMinutes: 0 },
+          { text: 'Pour the dashi stock and soy milk into the pot with the remaining pork. Bring to a gentle simmer—do not boil vigorously so the soy milk stays silky.', timerMinutes: 4 },
+          { text: 'Boil the fresh ramen noodles in a separate pot of water for 90 seconds, blanching the baby bok choy during the final 30 seconds.', timerMinutes: 2 },
+          { text: 'Ladle the hot broth into the sesame-lined bowls, whisk briefly to emulsify, nestle in the noodles, and top with crispy pork, bok choy, and scallions.', timerMinutes: 0 }
+        ]
+      },
+      {
+        id: 'chicken-adobo',
+        title: 'Classic Garlic & Black Pepper Chicken Adobo',
+        cuisine: 'Filipino',
+        region: 'Asia',
+        prepTime: 10,
+        cookTime: 35,
+        difficulty: 'Easy',
+        rating: 4.9,
+        reviews: 612,
+        baseServings: 4,
+        dietary: ['Dairy-Free'],
+        image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=1000&q=80',
+        summary: 'Bone-in chicken thighs braised in cane vinegar, soy sauce, crushed garlic, bay leaves, and whole black peppercorns until lacquered.',
+        culturalNote: 'Predating Spanish colonization, indigenous Filipinos preserved meats by cooking them in vinegar and salt. Spanish chroniclers named the technique "adobo" after their own marinade, yet the bright cane-vinegar braise remains unmistakably Filipino.',
+        ingredients: [
+          { name: 'bone-in, skin-on chicken thighs', usQty: 2, usUnit: 'lbs', metricQty: 900, metricUnit: 'g' },
+          { name: 'cane vinegar or white distilled vinegar', usQty: 0.5, usUnit: 'cup', metricQty: 120, metricUnit: 'ml' },
+          { name: 'soy sauce', usQty: 0.33, usUnit: 'cup', metricQty: 80, metricUnit: 'ml' },
+          { name: 'garlic cloves, smashed and peeled', usQty: 8, usUnit: 'cloves', metricQty: 8, metricUnit: 'cloves' },
+          { name: 'whole black peppercorns', usQty: 1.5, usUnit: 'tsp', metricQty: 4, metricUnit: 'g' },
+          { name: 'dried bay leaves', usQty: 3, usUnit: 'leaves', metricQty: 3, metricUnit: 'leaves' },
+          { name: 'brown sugar', usQty: 1, usUnit: 'tbsp', metricQty: 12, metricUnit: 'g' }
+        ],
+        steps: [
+          { text: 'Combine chicken thighs, soy sauce, smashed garlic, peppercorns, and bay leaves in a wide Dutch oven or skillet. Let marinate at room temperature for 15 minutes.', timerMinutes: 15 },
+          { text: 'Set the pan over medium-high heat and bring to a lively simmer. Pour in the cane vinegar without stirring for the first 3 minutes so the raw acid cooks off cleanly.', timerMinutes: 3 },
+          { text: 'Cover, lower heat to medium-low, and braise until the chicken is tender and infused with garlic, about 22 minutes.', timerMinutes: 22 },
+          { text: 'Uncover, stir in the brown sugar, and simmer briskly until the braising liquid reduces to a glossy, savory glaze that coats the chicken. Serve over steamed jasmine rice.', timerMinutes: 6 }
+        ]
+      },
+      {
+        id: 'tacos-al-pastor',
+        title: 'Skillet Pork Al Pastor with Charred Pineapple',
+        cuisine: 'Mexican',
+        region: 'Americas',
+        prepTime: 20,
+        cookTime: 18,
+        difficulty: 'Medium',
+        rating: 4.8,
+        reviews: 345,
+        baseServings: 4,
+        dietary: ['Gluten-Free', 'Dairy-Free'],
+        image: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=1000&q=80',
+        summary: 'Thinly shaved pork shoulder marinated in smoky guajillo chiles, achiote, and citrus, seared alongside caramelized pineapple.',
+        culturalNote: 'Born in Puebla in the early 20th century when Lebanese immigrants introduced vertical lamb shawarma spits (trompos), Al Pastor evolved into Mexico City’s quintessential street taco using pork, dried chiles, and sweet pineapple.',
+        ingredients: [
+          { name: 'boneless pork shoulder, thinly sliced', usQty: 1.5, usUnit: 'lbs', metricQty: 680, metricUnit: 'g' },
+          { name: 'dried guajillo chiles, stemmed & seeded', usQty: 3, usUnit: 'chiles', metricQty: 25, metricUnit: 'g' },
+          { name: 'achiote paste', usQty: 2, usUnit: 'tbsp', metricQty: 30, metricUnit: 'g' },
+          { name: 'fresh pineapple juice', usQty: 0.5, usUnit: 'cup', metricQty: 120, metricUnit: 'ml' },
+          { name: 'apple cider vinegar', usQty: 2, usUnit: 'tbsp', metricQty: 30, metricUnit: 'ml' },
+          { name: 'fresh pineapple rings, diced', usQty: 1, usUnit: 'cup', metricQty: 165, metricUnit: 'g' },
+          { name: 'corn tortillas, warmed', usQty: 12, usUnit: 'tortillas', metricQty: 12, metricUnit: 'tortillas' }
+        ],
+        steps: [
+          { text: 'Toast the guajillo chiles in a dry skillet for 30 seconds until fragrant, then soak in hot water for 10 minutes until pliable.', timerMinutes: 10 },
+          { text: 'Blend soaked chiles, achiote paste, pineapple juice, vinegar, garlic, and cumin into a vibrant crimson marinade. Toss thoroughly with the thinly sliced pork.', timerMinutes: 0 },
+          { text: 'Heat a cast-iron skillet until smoking hot. Sear the pork in batches for 4–5 minutes per batch so the edges char without steaming.', timerMinutes: 5 },
+          { text: 'Char the diced pineapple in the same skillet for 2 minutes, fold together with the pork, and pile onto warm corn tortillas with white onion, cilantro, and lime.', timerMinutes: 2 }
+        ]
+      },
+      {
+        id: 'misir-wot',
+        title: 'Ethiopian Spiced Red Lentil Stew (Misir Wot)',
+        cuisine: 'Ethiopian',
+        region: 'Africa & Middle East',
+        prepTime: 10,
+        cookTime: 30,
+        difficulty: 'Easy',
+        rating: 4.9,
+        reviews: 289,
+        baseServings: 4,
+        dietary: ['Vegan', 'Vegetarian', 'Gluten-Free', 'Dairy-Free'],
+        image: 'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=1000&q=80',
+        summary: 'Silky split red lentils slow-simmered with caramelized red onions, ginger, garlic, and warming Ethiopian berbere spice.',
+        culturalNote: 'A cornerstone of Ethiopian fasting (tsom) cuisine—observed on Wednesdays and Fridays by Orthodox Christians—Misir Wot demonstrates how slow-cooked aromatics and berbere create extraordinary depth without meat or dairy.',
+        ingredients: [
+          { name: 'split red lentils, rinsed until clear', usQty: 1.5, usUnit: 'cups', metricQty: 300, metricUnit: 'g' },
+          { name: 'red onions, finely minced', usQty: 2, usUnit: 'large', metricQty: 340, metricUnit: 'g' },
+          { name: 'Ethiopian berbere spice blend', usQty: 2.5, usUnit: 'tbsp', metricQty: 20, metricUnit: 'g' },
+          { name: 'tomato paste', usQty: 2, usUnit: 'tbsp', metricQty: 32, metricUnit: 'g' },
+          { name: 'fresh ginger & garlic, minced', usQty: 2, usUnit: 'tbsp', metricQty: 30, metricUnit: 'g' },
+          { name: 'vegetable broth or water', usQty: 3.5, usUnit: 'cups', metricQty: 840, metricUnit: 'ml' },
+          { name: 'olive oil or vegan niter kibbeh', usQty: 3, usUnit: 'tbsp', metricQty: 45, metricUnit: 'ml' }
+        ],
+        steps: [
+          { text: 'Cook the finely minced red onions in a dry pot over medium heat for 6 minutes until their moisture evaporates, then add oil and sauté until deeply golden.', timerMinutes: 8 },
+          { text: 'Stir in garlic, ginger, tomato paste, and berbere spice. Fry gently for 2 minutes with a splash of water so the spices bloom without scorching.', timerMinutes: 2 },
+          { text: 'Add the rinsed red lentils and broth. Bring to a boil, reduce heat to low, and simmer partially covered, stirring occasionally until creamy and tender, about 20 minutes.', timerMinutes: 20 },
+          { text: 'Season generously with sea salt and serve scooped onto tangy injera flatbread or warm rice.', timerMinutes: 0 }
+        ]
+      },
+      {
+        id: 'cacio-e-pepe',
+        title: 'Roman Cacio e Pepe with Toasted Tellicherry Pepper',
+        cuisine: 'Italian',
+        region: 'Europe',
+        prepTime: 5,
+        cookTime: 15,
+        difficulty: 'Medium',
+        rating: 4.7,
+        reviews: 510,
+        baseServings: 2,
+        dietary: ['Vegetarian'],
+        image: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=1000&q=80',
+        summary: 'Bronze-die tonnarelli pasta coated in an ultra-glossy emulsion of aged Pecorino Romano and freshly cracked black pepper.',
+        culturalNote: 'Born among shepherds grazing flocks in the Lazio countryside—who carried dried pasta, aged sheep’s milk cheese, and black pepper in their satchels—true Cacio e Pepe relies entirely on starch-water thermodynamics rather than cream or butter.',
+        ingredients: [
+          { name: 'tonnarelli or spaghetti pasta', usQty: 0.5, usUnit: 'lb', metricQty: 225, metricUnit: 'g' },
+          { name: 'Pecorino Romano, finely micro-grated', usQty: 1.25, usUnit: 'cups', metricQty: 115, metricUnit: 'g' },
+          { name: 'whole black peppercorns, coarsely cracked', usQty: 2, usUnit: 'tsp', metricQty: 6, metricUnit: 'g' },
+          { name: 'kosher salt (for pasta water)', usQty: 1, usUnit: 'tbsp', metricQty: 15, metricUnit: 'g' }
+        ],
+        steps: [
+          { text: 'Boil the pasta in a relatively small volume of lightly salted water (about 2 quarts) so the cooking liquid becomes extra rich in starch.', timerMinutes: 9 },
+          { text: 'Meanwhile, toast the coarsely cracked black pepper in a wide dry skillet over medium heat for 60 seconds until aromatic, then ladle in 1/2 cup of starchy pasta water.', timerMinutes: 1 },
+          { text: 'In a bowl, whisk the finely grated Pecorino Romano with a splash of warm (not boiling) pasta water to form a smooth paste.', timerMinutes: 0 },
+          { text: 'Transfer al dente pasta directly into the pepper skillet off the heat. Toss for 30 seconds to cool slightly, then vigorously fold in the Pecorino paste until a glossy cream coats every strand.', timerMinutes: 2 }
+        ]
+      },
+      {
+        id: 'lebanese-fatteh',
+        title: 'Warm Chickpea & Tahini Yogurt Fatteh',
+        cuisine: 'Lebanese',
+        region: 'Africa & Middle East',
+        prepTime: 15,
+        cookTime: 15,
+        difficulty: 'Easy',
+        rating: 4.9,
+        reviews: 198,
+        baseServings: 4,
+        dietary: ['Vegetarian'],
+        image: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1000&q=80',
+        summary: 'Crisp toasted pita shards layered under cumin-simmered chickpeas, garlicky tahini yogurt, pomegranate jewels, and sizzling pine nuts.',
+        culturalNote: 'Derived from the Arabic verb "fatta" (to crumble), Levantine Fatteh transforms day-old flatbread into a celebratory textural feast contrasting crunchy toasted pita, creamy yogurt, and warm spiced legumes.',
+        ingredients: [
+          { name: 'cooked chickpeas, drained (reserve liquid)', usQty: 3, usUnit: 'cups', metricQty: 480, metricUnit: 'g' },
+          { name: 'pita breads, cut into bite-size triangles', usQty: 3, usUnit: 'rounds', metricQty: 180, metricUnit: 'g' },
+          { name: 'whole-milk Greek yogurt', usQty: 1.5, usUnit: 'cups', metricQty: 360, metricUnit: 'g' },
+          { name: 'hulled tahini paste', usQty: 3, usUnit: 'tbsp', metricQty: 45, metricUnit: 'ml' },
+          { name: 'fresh lemon juice', usQty: 2, usUnit: 'tbsp', metricQty: 30, metricUnit: 'ml' },
+          { name: 'garlic clove, crushed to a paste', usQty: 1, usUnit: 'clove', metricQty: 1, metricUnit: 'clove' },
+          { name: 'pine nuts & pomegranate seeds', usQty: 0.5, usUnit: 'cup', metricQty: 75, metricUnit: 'g' }
+        ],
+        steps: [
+          { text: 'Toss pita triangles with olive oil and bake at 400°F (200°C) for 8 minutes until deeply golden and crisp.', timerMinutes: 8 },
+          { text: 'Simmer the chickpeas with a splash of their liquid, ground cumin, and sea salt until piping hot.', timerMinutes: 5 },
+          { text: 'Whisk together Greek yogurt, tahini, lemon juice, crushed garlic, and a pinch of salt until velvety.', timerMinutes: 0 },
+          { text: 'Arrange crispy pita on a platter, spoon warm chickpeas over top, blanket with tahini yogurt, and crown with toasted pine nuts, pomegranate seeds, and fresh parsley.', timerMinutes: 0 }
+        ]
+      },
+      {
+        id: 'thai-green-curry',
+        title: 'Fragrant Thai Green Curry with Basil & Bamboo',
+        cuisine: 'Thai',
+        region: 'Asia',
+        prepTime: 15,
+        cookTime: 15,
+        difficulty: 'Easy',
+        rating: 4.8,
+        reviews: 374,
+        baseServings: 4,
+        dietary: ['Gluten-Free', 'Dairy-Free'],
+        image: 'https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&w=1000&q=80',
+        summary: 'Vibrant green bird’s-eye chili and lemongrass curry simmered in rich coconut cream with tender chicken, Thai eggplant, and sweet basil.',
+        culturalNote: 'Known in Thailand as Kaeng Khiao Wan ("sweet green curry"—referring to its pale celadon color rather than sugariness), splitting the coconut cream first allows the herbal curry paste to fry in pure coconut oil.',
+        ingredients: [
+          { name: 'boneless chicken breast or thigh, sliced', usQty: 1.25, usUnit: 'lbs', metricQty: 560, metricUnit: 'g' },
+          { name: 'full-fat coconut milk', usQty: 1.75, usUnit: 'cups', metricQty: 400, metricUnit: 'ml' },
+          { name: 'Thai green curry paste', usQty: 3, usUnit: 'tbsp', metricQty: 45, metricUnit: 'g' },
+          { name: 'fish sauce (nam pla)', usQty: 1.5, usUnit: 'tbsp', metricQty: 22, metricUnit: 'ml' },
+          { name: 'palm sugar or light brown sugar', usQty: 1, usUnit: 'tbsp', metricQty: 14, metricUnit: 'g' },
+          { name: 'makrut lime leaves, torn', usQty: 4, usUnit: 'leaves', metricQty: 4, metricUnit: 'leaves' },
+          { name: 'fresh Thai sweet basil leaves', usQty: 1, usUnit: 'cup', metricQty: 30, metricUnit: 'g' }
+        ],
+        steps: [
+          { text: 'Spoon the thick coconut cream from the top of the can into a wok over medium-high heat and simmer until it separates and bubbles with clear coconut oil, about 3 minutes.', timerMinutes: 3 },
+          { text: 'Add the green curry paste and fry in the coconut oil for 2 minutes until intensely fragrant.', timerMinutes: 2 },
+          { text: 'Toss in the sliced chicken to coat, then pour in the remaining coconut milk and torn makrut lime leaves. Simmer gently for 8 minutes until cooked through.', timerMinutes: 8 },
+          { text: 'Balance the broth with fish sauce and palm sugar, fold in the Thai basil leaves right before serving so they stay bright green, and serve with jasmine rice.', timerMinutes: 0 }
+        ]
+      },
+      {
+        id: 'peruvian-ceviche',
+        title: 'Lima-Style Sea Bass Ceviche with Leche de Tigre',
+        cuisine: 'Peruvian',
+        region: 'Americas',
+        prepTime: 20,
+        cookTime: 0,
+        difficulty: 'Easy',
+        rating: 4.9,
+        reviews: 264,
+        baseServings: 4,
+        dietary: ['Gluten-Free', 'Dairy-Free'],
+        image: 'https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?auto=format&fit=crop&w=1000&q=80',
+        summary: 'Sushi-grade white fish cured to order in electric key-lime Leche de Tigre, ají limo chili, red onion, sweet potato, and toasted cancha corn.',
+        culturalNote: 'Declared part of Peru’s National Cultural Heritage, modern Lima ceviche rejects hours-long marination in favor of a brisk 3-minute toss in ice-cold citrus "tiger’s milk" that preserves the fish’s firm, ocean-fresh snap.',
+        ingredients: [
+          { name: 'sushi-grade sea bass or halibut, diced', usQty: 1.25, usUnit: 'lbs', metricQty: 560, metricUnit: 'g' },
+          { name: 'freshly squeezed key lime juice', usQty: 0.75, usUnit: 'cup', metricQty: 180, metricUnit: 'ml' },
+          { name: 'red onion, paper-thinly sliced & rinsed', usQty: 0.5, usUnit: 'medium', metricQty: 80, metricUnit: 'g' },
+          { name: 'ají limo or habanero chili, finely minced', usQty: 1, usUnit: 'chili', metricQty: 10, metricUnit: 'g' },
+          { name: 'fresh cilantro leaves, chopped', usQty: 0.33, usUnit: 'cup', metricQty: 15, metricUnit: 'g' },
+          { name: 'boiled orange sweet potato, sliced', usQty: 1, usUnit: 'medium', metricQty: 200, metricUnit: 'g' }
+        ],
+        steps: [
+          { text: 'Chill your mixing bowl and diced fish in the refrigerator for 10 minutes—keeping everything ice-cold is the secret to crisp ceviche.', timerMinutes: 10 },
+          { text: 'Season the cold fish cubes generously with flaky sea salt, tossing gently for 30 seconds so the salt opens the fish fibers.', timerMinutes: 0 },
+          { text: 'Pour over the freshly squeezed lime juice, minced ají chili, and cilantro. Toss gently for 2 to 3 minutes until the exterior turns opaque while the center remains tender.', timerMinutes: 3 },
+          { text: 'Top with crisp rinsed red onion and serve immediately alongside slices of sweet potato to balance the vibrant acidity.', timerMinutes: 0 }
+        ]
+      },
+      {
+        id: 'spanish-tortilla',
+        title: 'Caramelized Onion & Potato Tortilla Española',
+        cuisine: 'Spanish',
+        region: 'Europe',
+        prepTime: 15,
+        cookTime: 30,
+        difficulty: 'Medium',
+        rating: 4.8,
+        reviews: 312,
+        baseServings: 4,
+        dietary: ['Vegetarian', 'Gluten-Free', 'Dairy-Free'],
+        image: 'https://images.unsplash.com/photo-1515516969-d4008cc6241a?auto=format&fit=crop&w=1000&q=80',
+        summary: 'Velvety olive-oil-poached Yukon Gold potatoes and sweet onions bound in golden pasture-raised eggs with a custardy center.',
+        culturalNote: 'Whether served warm at a Madrid tapas bar or tucked into a crusty bocadillo at room temperature, Spain’s iconic tortilla relies on gently confiting potatoes in fruity extra-virgin olive oil before folding them into beaten eggs.',
+        ingredients: [
+          { name: 'Yukon Gold potatoes, peeled & thinly sliced', usQty: 1.5, usUnit: 'lbs', metricQty: 680, metricUnit: 'g' },
+          { name: 'yellow onion, thinly sliced', usQty: 1, usUnit: 'large', metricQty: 220, metricUnit: 'g' },
+          { name: 'large eggs, room temperature', usQty: 6, usUnit: 'eggs', metricQty: 6, metricUnit: 'eggs' },
+          { name: 'extra-virgin olive oil', usQty: 0.75, usUnit: 'cup', metricQty: 180, metricUnit: 'ml' },
+          { name: 'flaky sea salt', usQty: 1.5, usUnit: 'tsp', metricQty: 8, metricUnit: 'g' }
+        ],
+        steps: [
+          { text: 'Warm the olive oil in a 9-inch nonstick skillet over medium-low heat. Add sliced potatoes, onion, and salt; cook gently for 18 minutes until fork-tender without browning.', timerMinutes: 18 },
+          { text: 'Drain the potatoes and onions in a colander (reserve the flavorful oil for future cooking) and fold them gently into a bowl of beaten eggs. Let rest for 10 minutes.', timerMinutes: 10 },
+          { text: 'Return 1 tablespoon of oil to the skillet over medium heat, pour in the egg-potato mixture, and cook for 4 minutes until the edges set.', timerMinutes: 4 },
+          { text: 'Invert onto a large flat plate, slide back into the skillet, and cook 3 more minutes until golden outside and softly custardy inside.', timerMinutes: 3 }
+        ]
+      }
+    ];
+
+    /**
+     * 2. APPLICATION STATE
+     */
+    const state = {
+      selectedCuisine: 'All',
+      selectedDietary: 'All',
+      searchQuery: '',
+      searchMode: 'dish', // 'dish' | 'fridge'
+      maxTime: 999,
+      sortBy: 'featured',
+      // Active Modal Recipe State
+      activeRecipe: null,
+      servingMultiplier: 1,
+      unitSystem: 'us', // 'us' | 'metric'
+      cookMode: false,
+      wakeLockSentinel: null
+    };
+
+    /**
+     * 3. DOM ELEMENT REFERENCES
+     */
+    const dom = {
+      cuisineStrip: document.getElementById('cuisine-cards-strip'),
+      recipesGrid: document.getElementById('recipes-grid'),
+      emptyState: document.getElementById('empty-state'),
+      resultsHeading: document.getElementById('results-heading'),
+      resultsSubtext: document.getElementById('results-subtext'),
+      // Search & Filters
+      headerSearch: document.getElementById('header-search-input'),
+      mobileSearch: document.getElementById('mobile-search-input'),
+      heroSearch: document.getElementById('hero-search-input'),
+      heroSubmit: document.getElementById('hero-search-submit'),
+      timeSelect: document.getElementById('time-filter-select'),
+      sortSelect: document.getElementById('sort-select'),
+      modeDishBtn: document.getElementById('mode-dish-btn'),
+      modeFridgeBtn: document.getElementById('mode-fridge-btn'),
+      // Dropdowns
+      megaBtn: document.getElementById('mega-menu-btn'),
+      megaPanel: document.getElementById('mega-menu-panel'),
+      megaChevron: document.getElementById('mega-menu-chevron'),
+      dietaryBtn: document.getElementById('dietary-menu-btn'),
+      dietaryPanel: document.getElementById('dietary-menu-panel'),
+      dietaryBtnLabel: document.getElementById('dietary-btn-label'),
+      mobileDrawer: document.getElementById('mobile-drawer'),
+      // Modal & Cook Mode
+      modal: document.getElementById('recipe-modal'),
+      modalBody: document.getElementById('recipe-modal-body'),
+      closeModalBtn: document.getElementById('close-modal-btn'),
+      cookModeToggle: document.getElementById('cook-mode-toggle'),
+      cookModeDot: document.getElementById('cook-mode-dot'),
+      cookModeLabel: document.getElementById('cook-mode-label'),
+      wakeLockStatus: document.getElementById('wakelock-status')
+    };
+
+    /**
+     * 4. UTILITY HELPERS (NUMBER FORMATTING & FALLBACKS)
+     */
+    function formatQuantity(num) {
+      if (num === 0) return '0';
+      const rounded = Math.round(num * 100) / 100;
+      const whole = Math.floor(rounded);
+      const frac = Math.round((rounded - whole) * 100) / 100;
+
+      const fractionMap = [
+        { val: 0.25, str: '¼' },
+        { val: 0.33, str: '⅓' },
+        { val: 0.5, str: '½' },
+        { val: 0.66, str: '⅔' },
+        { val: 0.67, str: '⅔' },
+        { val: 0.75, str: '¾' }
+      ];
+
+      for (const f of fractionMap) {
+        if (Math.abs(frac - f.val) < 0.04) {
+          return whole > 0 ? `${whole} ${f.str}` : f.str;
+        }
+      }
+      return Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1).replace(/\.0$/, '');
+    }
+
+    /**
+     * 5. RENDER CUISINE EXPLORER STRIP
+     */
+    function renderCuisineExplorer() {
+      dom.cuisineStrip.innerHTML = CUISINES_META.map(c => {
+        const isActive = state.selectedCuisine === c.name;
+        const count = c.name === 'All'
+          ? RECIPES.length
+          : RECIPES.filter(r => r.cuisine === c.name).length;
+
+        return `
+          <button type="button" data-cuisine-card="${c.name}"
+            class="group shrink-0 w-36 sm:w-40 text-left rounded-2xl overflow-hidden border transition-all duration-200 ${
+              isActive
+                ? 'border-terracotta ring-2 ring-terracotta/30 bg-white shadow-md -translate-y-0.5'
+                : 'border-sand bg-white hover:border-terracotta/60 shadow-card'
+            }">
+            <div class="relative h-24 overflow-hidden bg-parchment">
+              <img src="${c.img}"
+                onerror="this.onerror=null;this.src='https://placehold.co/320x200/4A5D3F/FAF7F2?text=${encodeURIComponent(c.name)}';"
+                alt="${c.name} cuisine"
+                class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+              <div class="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent"></div>
+              <span class="absolute bottom-2 left-2.5 text-[11px] font-bold text-white/95">${c.countLabel}</span>
+            </div>
+            <div class="p-3 flex items-center justify-between">
+              <span class="font-serif font-bold text-sm ${isActive ? 'text-terracotta' : 'text-ink'}">${c.name}</span>
+              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                isActive ? 'bg-terracotta text-white' : 'bg-cream text-muted'
+              }">${count}</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      // Attach click events to cuisine cards
+      dom.cuisineStrip.querySelectorAll('[data-cuisine-card]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.selectedCuisine = btn.dataset.cuisineCard;
+          renderCuisineExplorer();
+          renderRecipesGrid();
+        });
+      });
+    }
+
+    /**
+     * 6. FILTER & RENDER RECIPE ARCHIVE GRID
+     */
+    function getFilteredRecipes() {
+      const query = state.searchQuery.trim().toLowerCase();
+
+      let filtered = RECIPES.filter(recipe => {
+        // Cuisine Filter
+        if (state.selectedCuisine !== 'All' && recipe.cuisine !== state.selectedCuisine) {
+          return false;
+        }
+
+        // Dietary Filter
+        if (state.selectedDietary !== 'All' && !recipe.dietary.includes(state.selectedDietary)) {
+          return false;
+        }
+
+        // Max Total Cook Time Filter
+        const totalTime = recipe.prepTime + recipe.cookTime;
+        if (totalTime > state.maxTime) {
+          return false;
+        }
+
+        // Search Filter (Standard vs Fridge Matcher)
+        if (query.length > 0) {
+          if (state.searchMode === 'fridge') {
+            // Split comma-separated ingredients and require matching at least one
+            const tokens = query.split(',').map(t => t.trim()).filter(Boolean);
+            const ingredientBlob = recipe.ingredients.map(i => i.name.toLowerCase()).join(' ');
+            const matchedCount = tokens.filter(token => ingredientBlob.includes(token)).length;
+            if (matchedCount === 0) return false;
+            recipe._fridgeMatchScore = matchedCount;
+          } else {
+            const searchableText = [
+              recipe.title,
+              recipe.cuisine,
+              recipe.region,
+              recipe.summary,
+              ...recipe.ingredients.map(i => i.name)
+            ].join(' ').toLowerCase();
+
+            if (!searchableText.includes(query)) return false;
+          }
+        } else {
+          recipe._fridgeMatchScore = 0;
+        }
+
+        return true;
+      });
+
+      // Sorting
+      if (state.searchMode === 'fridge' && query.length > 0) {
+        filtered.sort((a, b) => (b._fridgeMatchScore || 0) - (a._fridgeMatchScore || 0));
+      } else if (state.sortBy === 'rating') {
+        filtered.sort((a, b) => b.rating - a.rating);
+      } else if (state.sortBy === 'time-asc') {
+        filtered.sort((a, b) => (a.prepTime + a.cookTime) - (b.prepTime + b.cookTime));
+      }
+
+      return filtered;
+    }
+
+    function renderRecipesGrid() {
+      const recipes = getFilteredRecipes();
+
+      // Update Section Headings
+      const cuisineLabel = state.selectedCuisine === 'All' ? 'All Global Recipes' : `${state.selectedCuisine} Recipes`;
+      const dietLabel = state.selectedDietary !== 'All' ? ` (${state.selectedDietary})` : '';
+      dom.resultsHeading.textContent = `${cuisineLabel}${dietLabel}`;
+      dom.resultsSubtext.textContent = `Showing ${recipes.length} kitchen-tested ${recipes.length === 1 ? 'dish' : 'dishes'}`;
+
+      if (recipes.length === 0) {
+        dom.recipesGrid.innerHTML = '';
+        dom.emptyState.classList.remove('hidden');
+        return;
+      }
+
+      dom.emptyState.classList.add('hidden');
+
+      dom.recipesGrid.innerHTML = recipes.map(recipe => {
+        const totalTime = recipe.prepTime + recipe.cookTime;
+        const fridgeBadge = (state.searchMode === 'fridge' && state.searchQuery.trim() && recipe._fridgeMatchScore)
+          ? `<span class="px-2.5 py-1 rounded-full bg-olive text-white text-[11px] font-bold shadow-sm">Matches ${recipe._fridgeMatchScore} fridge item${recipe._fridgeMatchScore > 1 ? 's' : ''}</span>`
+          : '';
+
+        return `
+          <article data-open-recipe="${recipe.id}"
+            class="group cursor-pointer bg-white rounded-3xl border border-sand overflow-hidden shadow-card hover:shadow-editorial hover:-translate-y-1 transition-all duration-300 flex flex-col">
+
+            <!-- Dish Image & Badges -->
+            <div class="relative aspect-[16/11] overflow-hidden bg-parchment">
+              <img src="${recipe.image}"
+                onerror="this.onerror=null;this.src='https://placehold.co/800x550/C85A32/FAF7F2?text=${encodeURIComponent(recipe.title)}';"
+                alt="${recipe.title}"
+                class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+              <div class="absolute top-3.5 left-3.5 flex flex-wrap gap-1.5">
+                <span class="px-3 py-1 rounded-full bg-white/95 backdrop-blur-sm text-ink text-xs font-bold shadow-sm">
+                  ${recipe.cuisine}
+                </span>
+                ${fridgeBadge}
+              </div>
+              <div class="absolute bottom-3 right-3">
+                <span class="px-2.5 py-1 rounded-full bg-ink/80 backdrop-blur-sm text-white text-[11px] font-semibold">
+                  ${totalTime} mins
+                </span>
+              </div>
+            </div>
+
+            <!-- Card Body -->
+            <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs font-semibold text-muted">
+                  <span>${recipe.difficulty} &bull; ${recipe.region}</span>
+                  <span class="text-amber-600 font-bold">&#9733; ${recipe.rating} <span class="text-muted font-normal">(${recipe.reviews})</span></span>
+                </div>
+
+                <h4 class="font-serif text-xl font-bold text-ink group-hover:text-terracotta transition leading-snug">
+                  ${recipe.title}
+                </h4>
+
+                <p class="text-sm text-muted line-clamp-2 leading-relaxed">
+                  ${recipe.summary}
+                </p>
+              </div>
+
+              <!-- Dietary Pills Footer -->
+              <div class="pt-3 border-t border-sand/70 flex items-center justify-between gap-2">
+                <div class="flex flex-wrap gap-1.5">
+                  ${recipe.dietary.length > 0
+                    ? recipe.dietary.map(tag => `<span class="px-2.5 py-0.5 rounded-full bg-olive-light text-olive text-[11px] font-semibold">${tag}</span>`).join('')
+                    : `<span class="text-[11px] text-muted font-medium">Traditional Preparation</span>`
+                  }
+                </div>
+                <span class="text-xs font-bold text-terracotta group-hover:translate-x-0.5 transition">Cook &rarr;</span>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      // Attach click handlers to open recipe detail modal
+      dom.recipesGrid.querySelectorAll('[data-open-recipe]').forEach(card => {
+        card.addEventListener('click', () => openRecipeModal(card.dataset.openRecipe));
+      });
+    }
+
+    /**
+     * 7. RECIPE DETAIL MODAL (SCALING, UNIT CONVERSION, CHECKLISTS & COOK MODE)
+     */
+    function openRecipeModal(recipeId) {
+      const recipe = RECIPES.find(r => r.id === recipeId);
+      if (!recipe) return;
+
+      state.activeRecipe = recipe;
+      state.servingMultiplier = 1;
+      renderModalContent();
+
+      dom.modal.classList.remove('hidden');
+      dom.modal.scrollTop = 0;
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeRecipeModal() {
+      dom.modal.classList.add('hidden');
+      document.body.style.overflow = '';
+      if (state.cookMode) {
+        toggleCookMode(false);
+      }
+    }
+
+    function renderModalContent() {
+      const r = state.activeRecipe;
+      if (!r) return;
+
+      const currentServings = Math.round(r.baseServings * state.servingMultiplier * 10) / 10;
+      const totalTime = r.prepTime + r.cookTime;
+
+      dom.modalBody.innerHTML = `
+        <!-- Editorial Header & Cultural Context -->
+        <div class="space-y-5">
+          <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+            <span class="px-3 py-1 rounded-full bg-terracotta-light text-terracotta uppercase tracking-wider">${r.cuisine} &bull; ${r.region}</span>
+            <span class="px-3 py-1 rounded-full bg-cream text-muted cook-mode-surface">${r.difficulty}</span>
+            <span class="text-amber-600">&#9733; ${r.rating} (${r.reviews} ratings)</span>
+          </div>
+
+          <h2 id="modal-recipe-title" class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+            ${r.title}
+          </h2>
+
+          <p class="text-base sm:text-lg text-muted cook-mode-muted leading-relaxed">
+            ${r.summary}
+          </p>
+
+          <!-- Quick Stats Bar -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-cream border border-sand cook-mode-surface">
+            <div>
+              <span class="text-[11px] uppercase tracking-wider text-muted cook-mode-muted font-bold block">Prep Time</span>
+              <span class="text-sm font-bold">${r.prepTime} mins</span>
+            </div>
+            <div>
+              <span class="text-[11px] uppercase tracking-wider text-muted cook-mode-muted font-bold block">Cook Time</span>
+              <span class="text-sm font-bold">${r.cookTime} mins</span>
+            </div>
+            <div>
+              <span class="text-[11px] uppercase tracking-wider text-muted cook-mode-muted font-bold block">Total Time</span>
+              <span class="text-sm font-bold">${totalTime} mins</span>
+            </div>
+            <div>
+              <span class="text-[11px] uppercase tracking-wider text-muted cook-mode-muted font-bold block">Yield</span>
+              <span class="text-sm font-bold">${currentServings} Servings</span>
+            </div>
+          </div>
+
+          <!-- Hero Dish Photo -->
+          <div class="rounded-2xl overflow-hidden aspect-[16/9] bg-parchment border border-sand">
+            <img src="${r.image}"
+              onerror="this.onerror=null;this.src='https://placehold.co/1000x560/C85A32/FAF7F2?text=${encodeURIComponent(r.title)}';"
+              alt="${r.title}" class="w-full h-full object-cover" />
+          </div>
+
+          <!-- Cultural & Culinary Note -->
+          <blockquote class="p-5 rounded-2xl bg-parchment/70 border-l-4 border-terracotta cook-mode-surface space-y-1.5">
+            <span class="text-xs font-bold uppercase tracking-wider text-terracotta block">Culinary &amp; Cultural Context</span>
+            <p class="text-sm leading-relaxed text-ink/90 cook-mode-muted">${r.culturalNote}</p>
+          </blockquote>
+        </div>
+
+        <hr id="recipe-ingredients-anchor" class="border-sand" />
+
+        <!-- Interactive Recipe Controls: Serving Scaler & US/Metric Switcher -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-cream border border-sand cook-mode-surface">
+          <!-- Serving Multiplier -->
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-muted cook-mode-muted mr-1">Scale Servings:</span>
+            ${[0.5, 1, 2, 3].map(mult => `
+              <button type="button" data-scale="${mult}"
+                class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                  state.servingMultiplier === mult
+                    ? 'bg-terracotta text-white shadow-sm'
+                    : 'bg-white text-ink border border-sand hover:border-terracotta cook-mode-surface'
+                }">
+                ${mult}x (${Math.round(r.baseServings * mult * 10) / 10})
+              </button>
+            `).join('')}
+          </div>
+
+          <!-- Unit System Switcher -->
+          <div class="inline-flex rounded-xl bg-white border border-sand p-1 cook-mode-surface self-start sm:self-auto">
+            <button type="button" data-unit="us"
+              class="px-3 py-1 rounded-lg text-xs font-bold transition ${
+                state.unitSystem === 'us' ? 'bg-olive text-white' : 'text-muted hover:text-ink'
+              }">
+              US Customary
+            </button>
+            <button type="button" data-unit="metric"
+              class="px-3 py-1 rounded-lg text-xs font-bold transition ${
+                state.unitSystem === 'metric' ? 'bg-olive text-white' : 'text-muted hover:text-ink'
+              }">
+              Metric (g / ml)
+            </button>
+          </div>
+        </div>
+
+        <!-- Two-Column Ingredients & Step-by-Step Instructions -->
+        <div class="grid lg:grid-cols-12 gap-8 lg:gap-10">
+
+          <!-- Left Column: Ingredients Checklist -->
+          <div class="lg:col-span-5 space-y-4">
+            <h3 class="font-serif text-2xl font-bold border-b border-sand pb-2">Ingredients</h3>
+            <ul class="space-y-3">
+              ${r.ingredients.map((ing, idx) => {
+                const rawQty = state.unitSystem === 'us' ? ing.usQty : ing.metricQty;
+                const unit = state.unitSystem === 'us' ? ing.usUnit : ing.metricUnit;
+                const scaledQty = formatQuantity(rawQty * state.servingMultiplier);
+
+                return `
+                  <li>
+                    <label class="flex items-start gap-3 cursor-pointer select-none group">
+                      <input type="checkbox" class="editorial-checkbox mt-1 w-4 h-4 rounded border-sand accent-terracotta cursor-pointer" />
+                      <span class="cook-mode-text-lg text-sm leading-relaxed transition">
+                        <strong class="font-bold text-terracotta">${scaledQty} ${unit}</strong> ${ing.name}
+                      </span>
+                    </label>
+                  </li>
+                `;
+              }).join('')}
+            </ul>
+          </div>
+
+          <!-- Right Column: Step-by-Step Interactive Instructions -->
+          <div class="lg:col-span-7 space-y-5">
+            <div class="flex items-center justify-between border-b border-sand pb-2">
+              <h3 class="font-serif text-2xl font-bold">Preparation</h3>
+              <span class="text-xs text-muted cook-mode-muted">Click a step to mark complete</span>
+            </div>
+
+            <ol class="space-y-5">
+              ${r.steps.map((step, idx) => `
+                <li class="recipe-step-item p-4 rounded-2xl border border-sand/80 bg-cream/40 hover:border-terracotta/50 transition cursor-pointer cook-mode-surface">
+                  <div class="flex items-start gap-3.5">
+                    <span class="w-7 h-7 rounded-full bg-terracotta text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      ${idx + 1}
+                    </span>
+                    <div class="space-y-2.5 flex-1">
+                      <p class="step-text cook-mode-text-lg text-sm sm:text-base leading-relaxed">
+                        ${step.text}
+                      </p>
+                      ${step.timerMinutes > 0 ? `
+                        <button type="button" data-timer-mins="${step.timerMinutes}"
+                          class="step-timer-btn inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-olive-light text-olive text-xs font-bold hover:bg-olive hover:text-white transition">
+                          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2M9 2h6"></path>
+                          </svg>
+                          <span>Start ${step.timerMinutes}m Timer</span>
+                        </button>
+                      ` : ''}
+                    </div>
+                  </div>
+                </li>
+              `).join('')}
+            </ol>
+          </div>
+
+        </div>
+      `;
+
+      // Bind Scaler Buttons
+      dom.modalBody.querySelectorAll('[data-scale]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.servingMultiplier = parseFloat(btn.dataset.scale);
+          renderModalContent();
+        });
+      });
+
+      // Bind Unit Switcher Buttons
+      dom.modalBody.querySelectorAll('[data-unit]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.unitSystem = btn.dataset.unit;
+          renderModalContent();
+        });
+      });
+
+      // Bind Step Completion Toggle
+      dom.modalBody.querySelectorAll('.recipe-step-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          if (e.target.closest('.step-timer-btn')) return;
+          item.classList.toggle('step-completed');
+        });
+      });
+
+      // Bind Inline Step Countdown Timers
+      dom.modalBody.querySelectorAll('.step-timer-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (btn.dataset.running === 'true') return;
+          btn.dataset.running = 'true';
+          let remainingSeconds = parseInt(btn.dataset.timerMins, 10) * 60;
+          const labelSpan = btn.querySelector('span');
+
+          const interval = setInterval(() => {
+            remainingSeconds--;
+            if (remainingSeconds <= 0) {
+              clearInterval(interval);
+              labelSpan.textContent = 'Timer Done!';
+              btn.classList.remove('bg-olive-light', 'text-olive');
+              btn.classList.add('bg-terracotta', 'text-white');
+              return;
+            }
+            const mins = Math.floor(remainingSeconds / 60);
+            const secs = String(remainingSeconds % 60).padStart(2, '0');
+            labelSpan.textContent = `${mins}:${secs} remaining`;
+          }, 1000);
+        });
+      });
+    }
+
+    /**
+     * 8. COOK MODE & SCREEN WAKE LOCK API
+     */
+    async function toggleCookMode(forceState) {
+      state.cookMode = typeof forceState === 'boolean' ? forceState : !state.cookMode;
+
+      if (state.cookMode) {
+        document.body.classList.add('cook-mode-active');
+        dom.cookModeLabel.textContent = 'Cook Mode: On';
+        dom.cookModeDot.classList.replace('bg-muted', 'bg-emerald-500');
+        dom.cookModeToggle.classList.add('border-emerald-500');
+
+        // Request Screen Wake Lock if supported by browser
+        if ('wakeLock' in navigator) {
+          try {
+            state.wakeLockSentinel = await navigator.wakeLock.request('screen');
+            dom.wakeLockStatus.textContent = 'Screen Awake Locked';
+          } catch (err) {
+            dom.wakeLockStatus.textContent = 'High-Contrast Mode Active';
+          }
+        } else {
+          dom.wakeLockStatus.textContent = 'High-Contrast Mode Active';
+        }
+      } else {
+        document.body.classList.remove('cook-mode-active');
+        dom.cookModeLabel.textContent = 'Cook Mode: Off';
+        dom.cookModeDot.classList.replace('bg-emerald-500', 'bg-muted');
+        dom.cookModeToggle.classList.remove('border-emerald-500');
+        dom.wakeLockStatus.textContent = '';
+
+        if (state.wakeLockSentinel) {
+          try {
+            await state.wakeLockSentinel.release();
+          } catch (_) {}
+          state.wakeLockSentinel = null;
+        }
+      }
+    }
+
+    /**
+     * 9. NAVIGATION, SEARCH MODE & EVENT WIRING
+     */
+    function syncSearchInputs(value) {
+      state.searchQuery = value;
+      if (dom.headerSearch.value !== value) dom.headerSearch.value = value;
+      if (dom.heroSearch.value !== value) dom.heroSearch.value = value;
+      if (dom.mobileSearch.value !== value) dom.mobileSearch.value = value;
+      renderRecipesGrid();
+    }
+
+    function setSearchMode(mode) {
+      state.searchMode = mode;
+      if (mode === 'fridge') {
+        dom.modeFridgeBtn.className = 'search-mode-tab px-3.5 py-1.5 rounded-full text-xs font-bold bg-olive text-white transition flex items-center gap-1.5';
+        dom.modeDishBtn.className = 'search-mode-tab px-3.5 py-1.5 rounded-full text-xs font-bold bg-cream text-muted hover:text-ink transition';
+        dom.heroSearch.placeholder = 'Enter fridge ingredients separated by commas (e.g. chicken, garlic, vinegar)...';
+      } else {
+        dom.modeDishBtn.className = 'search-mode-tab px-3.5 py-1.5 rounded-full text-xs font-bold bg-ink text-white transition';
+        dom.modeFridgeBtn.className = 'search-mode-tab px-3.5 py-1.5 rounded-full text-xs font-bold bg-cream text-muted hover:text-ink transition flex items-center gap-1.5';
+        dom.heroSearch.placeholder = "Try 'Miso Ramen', 'Peruvian', or 'garlic'...";
+      }
+      renderRecipesGrid();
+    }
+
+    function openRandomDish() {
+      const randomIndex = Math.floor(Math.random() * RECIPES.length);
+      openRecipeModal(RECIPES[randomIndex].id);
+    }
+
+    function resetAllFilters() {
+      state.selectedCuisine = 'All';
+      state.selectedDietary = 'All';
+      state.maxTime = 999;
+      dom.timeSelect.value = '999';
+      dom.dietaryBtnLabel.textContent = 'Dietary: All';
+      setSearchMode('dish');
+      syncSearchInputs('');
+      renderCuisineExplorer();
+      renderRecipesGrid();
+    }
+
+    // Initialize Event Listeners
+    function initEvents() {
+      // Mega Menu Toggle
+      dom.megaBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dom.dietaryPanel.classList.add('hidden');
+        const isHidden = dom.megaPanel.classList.toggle('hidden');
+        dom.megaChevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+      });
+
+      // Dietary Menu Toggle
+      dom.dietaryBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dom.megaPanel.classList.add('hidden');
+        dom.megaChevron.style.transform = 'rotate(0deg)';
+        dom.dietaryPanel.classList.toggle('hidden');
+      });
+
+      // Close dropdowns on outside click
+      document.addEventListener('click', (e) => {
+        if (!document.getElementById('mega-menu-wrapper').contains(e.target)) {
+          dom.megaPanel.classList.add('hidden');
+          dom.megaChevron.style.transform = 'rotate(0deg)';
+        }
+        if (!document.getElementById('dietary-menu-wrapper').contains(e.target)) {
+          dom.dietaryPanel.classList.add('hidden');
+        }
+      });
+
+      // Mega-Menu Cuisine Selection
+      document.querySelectorAll('.mega-cuisine-link').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.selectedCuisine = btn.dataset.cuisineFilter;
+          dom.megaPanel.classList.add('hidden');
+          dom.mobileDrawer.classList.add('hidden');
+          renderCuisineExplorer();
+          renderRecipesGrid();
+          document.getElementById('explorer-section').scrollIntoView({ behavior: 'smooth' });
+        });
+      });
+
+      // Dietary Option Selection (Desktop & Mobile)
+      document.querySelectorAll('[data-dietary]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.selectedDietary = btn.dataset.dietary;
+          dom.dietaryBtnLabel.textContent = `Dietary: ${state.selectedDietary}`;
+          dom.dietaryPanel.classList.add('hidden');
+          dom.mobileDrawer.classList.add('hidden');
+          renderRecipesGrid();
+        });
+      });
+
+      // Mobile Drawer Toggle
+      document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+        dom.mobileDrawer.classList.toggle('hidden');
+      });
+
+      // Search Inputs & Modes
+      dom.headerSearch.addEventListener('input', (e) => syncSearchInputs(e.target.value));
+      dom.mobileSearch.addEventListener('input', (e) => syncSearchInputs(e.target.value));
+      dom.heroSearch.addEventListener('input', (e) => syncSearchInputs(e.target.value));
+      dom.heroSubmit.addEventListener('click', () => {
+        document.getElementById('recipes-grid-section').scrollIntoView({ behavior: 'smooth' });
+      });
+
+      dom.modeDishBtn.addEventListener('click', () => setSearchMode('dish'));
+      dom.modeFridgeBtn.addEventListener('click', () => setSearchMode('fridge'));
+
+      // Fridge Preset Chips
+      document.querySelectorAll('.fridge-preset-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          setSearchMode('fridge');
+          syncSearchInputs(chip.dataset.fridgePreset);
+          document.getElementById('recipes-grid-section').scrollIntoView({ behavior: 'smooth' });
+        });
+      });
+
+      // Time & Sort Selects
+      dom.timeSelect.addEventListener('change', (e) => {
+        state.maxTime = parseInt(e.target.value, 10);
+        renderRecipesGrid();
+      });
+      dom.sortSelect.addEventListener('change', (e) => {
+        state.sortBy = e.target.value;
+        renderRecipesGrid();
+      });
+
+      // Random Dish Triggers
+      document.getElementById('random-dish-btn').addEventListener('click', openRandomDish);
+      document.getElementById('mobile-random-btn').addEventListener('click', openRandomDish);
+      document.getElementById('footer-random-btn').addEventListener('click', openRandomDish);
+
+      // Hero Featured Card Trigger
+      document.getElementById('hero-featured-card').addEventListener('click', () => {
+        openRecipeModal('tantanmen-ramen');
+      });
+
+      // Reset Triggers
+      document.getElementById('reset-all-filters-btn').addEventListener('click', resetAllFilters);
+      document.getElementById('empty-reset-btn').addEventListener('click', resetAllFilters);
+      document.getElementById('brand-reset').addEventListener('click', (e) => {
+        e.preventDefault();
+        resetAllFilters();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      // Modal Controls
+      dom.closeModalBtn.addEventListener('click', closeRecipeModal);
+      dom.modal.addEventListener('click', (e) => {
+        if (e.target === dom.modal) closeRecipeModal();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !dom.modal.classList.contains('hidden')) {
+          closeRecipeModal();
+        }
+      });
+      dom.cookModeToggle.addEventListener('click', () => toggleCookMode());
+    }
+
+    // Boot Application
+    window.addEventListener('DOMContentLoaded', () => {
+      renderCuisineExplorer();
+      renderRecipesGrid();
+      initEvents();
+    });
+  </script>
+</body>
+</html>
